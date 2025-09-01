@@ -54,16 +54,45 @@ class SerPy:
 
         return wrapper
 
+    def find_route(self, route_method , route_path):
+        
+        for (method, path), handler in self.routes.items():
+            
+            if(method != route_method):
+                continue
+            
+            route_parts  = path.split('/')
+            path_parts = route_path.split('/') 
+            
+            if( len(route_parts) != len(path_parts)):
+                continue
+            
+            params = {}
+            match = True
+            
+            for route_part , path_part in zip(route_parts, path_parts):
+                if route_part.startswith('{') and route_part.endswith('}'):
+                    param_name = route_part[1:-1]
+                    params[param_name] = path_part
+                elif route_part != path_part:
+                    match = False
+                    break
+
+            if match:
+                return handler, params
+
+        return None, None
+
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
             print("SerPy is only configured for Http requests.")
             return
         
         request = Request(scope)
-        handler = self.routes.get((request.method, request.path))
+        handler, params = self.find_route(request.method, request.path)
 
         if handler:
-            response = await handler(request)
+            response = await handler(request, **params)
         else:
             response = Response(content={"error": "Route Not Found"}, status_code=404)
 
