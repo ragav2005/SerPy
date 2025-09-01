@@ -1,17 +1,9 @@
 from SerPy import SerPy, Response
+from users.users import user_router
 
 app = SerPy()
+app.include_router(user_router, prefix="/users")
 
-
-@app.route("/" , methods=['GET'])
+@app.route("/", methods=["GET"])
 async def home(request):
-    return Response({"message": "This is a GET request to the home page."})
-
-
-@app.route("/home/{id}", methods=['GET'])
-async def get_user(request, id):
-    
-    return Response({
-        "message": f"Fetching details for User ID: {id}",
-        "requested_path": request.path
-    })
+    return Response({"message": "Welcome to the home page!"})

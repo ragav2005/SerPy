@@ -35,12 +35,32 @@ class Response:
             "body": body,
         })
 
+class Router:
+    def __init__(self):
+        self.routes = {}
+    
+    def route(self, path, methods=None):
+        if methods is None:
+            methods = ["GET"]
+        
+        def wrapper(handler):
+            for method in methods:
+                self.routes[(method.upper(), path)] = handler
+            return handler
+        return wrapper
+    
 
 class SerPy:
     def __init__(self):
         print("SerPy is initializing!")
         self.routes = {}
 
+
+    def include_router(self , router:Router, prefix):
+        for (method , path) , handler in router.routes.items():
+            self.routes[(method, prefix+path)] = handler
+            
+    
     def route(self, path, methods=None):
         
         if methods is None:
