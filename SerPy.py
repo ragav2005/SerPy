@@ -1,10 +1,11 @@
 import json
-
+from urllib.parse import parse_qs
 
 class Request:
 
     def __init__(self, scope):
         self.scope = scope
+        self._query_params = None
 
     @property
     def path(self):
@@ -13,6 +14,30 @@ class Request:
     @property
     def method(self):
         return self.scope['method']
+
+    @property
+    def headers(self):
+        return self.scope['headers']
+    
+    @property
+    def query(self):
+        if self._query_params is None:
+            query_string = self.scope['query_string'].decode("utf-8")
+            self._query_params = QueryParams(query_string)
+        return self._query_params
+        
+
+class QueryParams:
+    def __init__(self, query_string):
+        self._params = parse_qs(query_string)
+
+    def get(self, key, default=None):
+        values = self._params.get(key, [])
+        return values[0] if values else default
+    
+    def getall(self, key, default=None):
+        return self._params.get(key , default or [])
+        
 
 
 class Response:
@@ -73,6 +98,7 @@ class SerPy:
             return handler
 
         return wrapper
+    
 
     def find_route(self, route_method , route_path):
         
