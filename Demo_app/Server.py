@@ -6,23 +6,18 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 # App code starts here
-from SerPy import SerPy, Response
-from users.users import user_router
+from SerPy import SerPy, Response, Request
+from middleware import timing_middleware, auth_middleware
 
 app = SerPy()
-app.include_router(user_router, prefix="/users")
 
-@app.route("/", methods=["GET"])
-async def home(request):
-    return Response({"message": "Welcome to the home page!"})
 
-@app.route("/search", methods=["POST","GET"])
-async def search(request):
-    data = await request.json()
-    search_term = request.query.getall("q", default="")
-    limit = int(request.query.get("limit", default=10))
-    print(data)
-    return Response({
-        "message": f"Searching for {search_term}",
-        "limit": limit
-    })
+app.add_middleware(timing_middleware)
+
+@app.route("/")
+async def public_route(request):
+    return Response({"message": "This is a public route."})
+
+@app.route("/profile", middleware=[auth_middleware], methods=["GET"])
+async def protected_route(request):
+    return Response({"message": "This is a protected route. You are authorized."})
