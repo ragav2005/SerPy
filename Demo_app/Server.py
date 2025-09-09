@@ -16,11 +16,12 @@ app.include_router(user_router, prefix="/users")
 async def home(request):
     return Response({"message": "Welcome to the home page!"})
 
-@app.route("/search")
+@app.route("/search", methods=["POST","GET"])
 async def search(request):
+    data = await request.json()
     search_term = request.query.getall("q", default="")
     limit = int(request.query.get("limit", default=10))
-
+    print(data)
     return Response({
         "message": f"Searching for {search_term}",
         "limit": limit

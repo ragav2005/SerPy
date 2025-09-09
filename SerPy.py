@@ -3,14 +3,27 @@ from urllib.parse import parse_qs
 
 class Request:
 
-    def __init__(self, scope):
+    def __init__(self, scope, receive):
         self.scope = scope
         self._query_params = None
+        self.receive = receive
 
+    async def json(self):
+        body = b''
+        more_body = True
+        while more_body:
+            message = await self.receive()
+            body += message.get('body', b'')
+            more_body = message.get('more_body', False)
+
+        if not body:
+            return None
+        return json.loads(body)
+    
     @property
     def path(self):
         return self.scope['path']
-
+ 
     @property
     def method(self):
         return self.scope['method']
@@ -134,7 +147,7 @@ class SerPy:
             print("SerPy is only configured for Http requests.")
             return
         
-        request = Request(scope)
+        request = Request(scope , receive)
         handler, params = self.find_route(request.method, request.path)
 
         if handler:
